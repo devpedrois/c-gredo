@@ -1,5 +1,7 @@
 #include "gui.h"
+#include "game_logic.h"
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -58,4 +60,58 @@ void desenharTelaMenu(GameState *gameState, GameSession *gameSession, GuiContext
     inicializarSessaoJogo(gameSession, 0.0);
     resetarGuiParaNovaPartida(guiContext);
     *gameState = JOGANDO;
+}
+
+static void atualizarTamanhoPalpiteAtual(char currentGuess[], bool filledPositions[], int *currentGuessLength) {
+    int index;
+
+    if (currentGuess == NULL || filledPositions == NULL || currentGuessLength == NULL) {
+        return;
+    }
+
+    currentGuess[passwordLength] = '\0';
+    *currentGuessLength = (int) strlen(currentGuess);
+    for (index = 0; index < passwordLength; index++) {
+        filledPositions[index] = index < *currentGuessLength;
+    }
+}
+
+static bool montarPalpiteGui(char currentGuess[], bool filledPositions[], int *currentGuessLength, char *guessBuffer, size_t bufferSize) {
+    if (currentGuess == NULL || filledPositions == NULL || currentGuessLength == NULL || guessBuffer == NULL || bufferSize <= passwordLength) {
+        return false;
+    }
+
+    atualizarTamanhoPalpiteAtual(currentGuess, filledPositions, currentGuessLength);
+    if (*currentGuessLength <= 0) {
+        return false;
+    }
+
+    snprintf(guessBuffer, bufferSize, "%s", currentGuess);
+    return palpiteValido(guessBuffer);
+}
+
+static bool processarEnvioPalpiteGui(GameSession *gameSession, char currentGuess[], bool filledPositions[], int *currentGuessLength, char *statusMessage, size_t statusMessageSize) {
+    char guessToSubmit[passwordLength + 1];
+    HintResult lastHint;
+
+    if (gameSession == NULL || statusMessage == NULL) {
+        return false;
+    }
+
+    if (!montarPalpiteGui(currentGuess, filledPositions, currentGuessLength, guessToSubmit, sizeof(guessToSubmit))) {
+        snprintf(statusMessage, statusMessageSize, "Digite um numero valido entre %d e %d.", targetMinValue, targetMaxValue);
+        return false;
+    }
+
+    if (!enviarPalpite(gameSession, guessToSubmit, 0.0)) {
+        snprintf(statusMessage, statusMessageSize, "Palpite invalido ou partida ja encerrada.");
+        return false;
+    }
+
+    lastHint = gameSession->hints[gameSession->attemptCount - 1];
+    snprintf(statusMessage, statusMessageSize, "Feedback: %s.", obterTextoFeedback(&lastHint));
+    memset(currentGuess, 0, passwordLength + 1);
+    memset(filledPositions, 0, (size_t) passwordLength * sizeof(bool));
+    *currentGuessLength = 0;
+    return true;
 }
