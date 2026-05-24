@@ -1,3 +1,4 @@
+#include "analytics.h"
 #include "game_logic.h"
 #include "persistence.h"
 
@@ -67,6 +68,40 @@ static void lerNomeJogadorTerminal(char *playerName, size_t playerNameSize)
     } while (playerName[0] == '\0');
 }
 
+static void mostrarHistorico(const GameHistory *gameHistory)
+{
+    size_t index;
+
+    if (gameHistory == NULL || gameHistory->count == 0)
+    {
+        printf("\nNenhuma partida salva ainda.\n");
+        return;
+    }
+
+    printf("\nHistorico de partidas:\n");
+    for (index = 0; index < gameHistory->count; index++)
+    {
+        const GameResult *result = &gameHistory->results[index];
+
+        printf(
+            "%d. %s | %s | alvo %d | %d tentativa(s) | %ds | %s\n",
+            result->id,
+            result->playerName,
+            result->didWin ? "vitoria" : "derrota",
+            result->targetNumber,
+            result->attemptsUsed,
+            result->durationSeconds,
+            result->timestamp
+        );
+    }
+}
+
+static void mostrarAnalytics(const GameHistory *gameHistory)
+{
+    printAnalyticsReport(gameHistory);
+    printLeaderboard(gameHistory);
+}
+
 static void executarPartidaTerminal(GameHistory *gameHistory, const char *playerName)
 {
     GameSession gameSession;
@@ -95,6 +130,11 @@ static void executarPartidaTerminal(GameHistory *gameHistory, const char *player
     if (salvarResultadoNoArquivo(&gameResult, rankingFilePath))
     {
         adicionarResultadoAoHistorico(gameHistory, gameResult);
+        printf("Partida salva em %s.\n", rankingFilePath);
+    }
+    else
+    {
+        printf("Nao foi possivel salvar a partida.\n");
     }
 }
 
@@ -109,9 +149,9 @@ int main(void)
     carregarHistorico(&gameHistory, rankingFilePath);
     lerNomeJogadorTerminal(playerName, sizeof(playerName));
 
-    while (option != 3)
+    while (option != 4)
     {
-        printf("\n1. Jogar\n2. Analisar\n3. Sair\n");
+        printf("\n1. Jogar\n2. Ver historico\n3. Ver analytics\n4. Sair\n");
         if (!lerInteiroTerminal("Escolha: ", &option))
         {
             printf("Opcao invalida.\n");
@@ -124,9 +164,13 @@ int main(void)
         }
         else if (option == 2)
         {
-            printf("\nHistorico carregado: %d partida(s).\n", (int)gameHistory.count);
+            mostrarHistorico(&gameHistory);
         }
-        else if (option != 3)
+        else if (option == 3)
+        {
+            mostrarAnalytics(&gameHistory);
+        }
+        else if (option != 4)
         {
             printf("Opcao invalida.\n");
         }
