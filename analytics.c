@@ -1,5 +1,7 @@
 #include "analytics.h"
+#include "recursive_utils.h"
 
+#include <math.h>
 #include <stdio.h>
 
 static int isBetterLeaderboardEntry(const GameResult *candidate, const GameResult *current) {
@@ -15,44 +17,31 @@ static int isBetterLeaderboardEntry(const GameResult *candidate, const GameResul
 }
 
 AnalyticsReport buildAnalyticsReport(const GameHistory *gameHistory) {
-    AnalyticsReport report = {0, 0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0};
-    size_t index;
-    int totalAttempts = 0;
-    int totalLowBias = 0;
-    int totalHighBias = 0;
+    AnalyticsReport report = {0, 0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0};
+    int totalAttempts;
+    double squaredDiffSum;
+    int totalLowBias;
+    int totalHighBias;
 
     if (gameHistory == NULL || gameHistory->count == 0) {
         return report;
     }
 
     report.playedGames = (int) gameHistory->count;
-    report.bestAttempts = gameHistory->results[0].attemptsUsed;
-    report.worstAttempts = gameHistory->results[0].attemptsUsed;
-
-    for (index = 0; index < gameHistory->count; index++) {
-        const GameResult *result = &gameHistory->results[index];
-
-        if (result->didWin) {
-            report.wonGames++;
-        }
-
-        if (result->attemptsUsed < report.bestAttempts) {
-            report.bestAttempts = result->attemptsUsed;
-        }
-
-        if (result->attemptsUsed > report.worstAttempts) {
-            report.worstAttempts = result->attemptsUsed;
-        }
-
-        totalAttempts += result->attemptsUsed;
-        totalLowBias += result->lowBiasCount;
-        totalHighBias += result->highBiasCount;
-    }
-
+    report.wonGames = contarVitoriasRecursivo(gameHistory->results, gameHistory->count);
     report.lostGames = report.playedGames - report.wonGames;
+    report.bestAttempts = minTentativasRecursivo(gameHistory->results, gameHistory->count);
+    report.worstAttempts = maxTentativasRecursivo(gameHistory->results, gameHistory->count);
+
+    totalAttempts = somarTentativasRecursivo(gameHistory->results, gameHistory->count);
     report.averageAttempts = (double) totalAttempts / (double) report.playedGames;
     report.winRate = ((double) report.wonGames / (double) report.playedGames) * 100.0;
 
+    squaredDiffSum = somarDiferencasQuadradasRecursivo(gameHistory->results, gameHistory->count, report.averageAttempts);
+    report.standardDeviation = sqrt(squaredDiffSum / (double) report.playedGames);
+
+    totalLowBias = somarPalpitesBaixosRecursivo(gameHistory->results, gameHistory->count);
+    totalHighBias = somarPalpitesAltosRecursivo(gameHistory->results, gameHistory->count);
     if (totalLowBias + totalHighBias > 0) {
         report.taxaViesBaixo = ((double) totalLowBias / (totalLowBias + totalHighBias)) * 100.0;
         report.taxaViesAlto = ((double) totalHighBias / (totalLowBias + totalHighBias)) * 100.0;
@@ -60,6 +49,9 @@ AnalyticsReport buildAnalyticsReport(const GameHistory *gameHistory) {
         report.taxaViesBaixo = 0.0;
         report.taxaViesAlto = 0.0;
     }
+
+    report.partidasMonotonicas = contarPartidasMonotonasRecursivo(gameHistory->results, gameHistory->count);
+    report.partidasRepetidas = contarPartidasComRepeticaoRecursivo(gameHistory->results, gameHistory->count);
 
     return report;
 }
@@ -112,10 +104,13 @@ void printAnalyticsReport(const GameHistory *gameHistory) {
     printf("Derrotas: %d\n", report.lostGames);
     printf("Taxa de vitoria: %.2f%%\n", report.winRate);
     printf("Media de tentativas: %.2f\n", report.averageAttempts);
+    printf("Desvio padrao: %.2f\n", report.standardDeviation);
     printf("Melhor desempenho: %d tentativa(s)\n", report.bestAttempts);
     printf("Pior desempenho: %d tentativa(s)\n", report.worstAttempts);
     printf("Vies para baixo (chutes muito baixos): %.2f%%\n", report.taxaViesBaixo);
     printf("Vies para cima (chutes muito altos): %.2f%%\n", report.taxaViesAlto);
+    printf("Partidas com chutes monotonos: %d\n", report.partidasMonotonicas);
+    printf("Partidas com palpites repetidos: %d\n", report.partidasRepetidas);
 }
 
 void printLeaderboard(const GameHistory *gameHistory) {

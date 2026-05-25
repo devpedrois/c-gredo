@@ -15,9 +15,12 @@ typedef struct {
     int bestAttempts;
     int worstAttempts;
     double averageAttempts;
+    double standardDeviation;
     double winRate;
-    double taxaViesBaixo;  // Taxa média de viés baixo
-    double taxaViesAlto;   // Taxa média de viés alto
+    double taxaViesBaixo;      
+    double taxaViesAlto;       
+    int partidasMonotonicas;  
+    int partidasRepetidas;    
 } AnalyticsReport;
 
 typedef struct {

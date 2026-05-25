@@ -2,11 +2,16 @@
 #include "game_logic.h"
 #include "persistence.h"
 
-#include <stdbool.h>
+#ifdef USE_RAYLIB
+#include "gui.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+
+#ifndef USE_RAYLIB
 
 static bool lerLinhaTerminal(char *buffer, size_t bufferSize)
 {
@@ -138,44 +143,55 @@ static void executarPartidaTerminal(GameHistory *gameHistory, const char *player
     }
 }
 
+#endif
+
 int main(void)
 {
     GameHistory gameHistory;
-    char playerName[playerNameLength];
-    int option = 0;
+    int exitCode = EXIT_SUCCESS;
 
     srand((unsigned int)time(NULL));
     inicializarHistorico(&gameHistory);
     carregarHistorico(&gameHistory, rankingFilePath);
-    lerNomeJogadorTerminal(playerName, sizeof(playerName));
 
-    while (option != 4)
+#ifdef USE_RAYLIB
+    exitCode = runRaylibApp(&gameHistory);
+#else
     {
-        printf("\n1. Jogar\n2. Ver historico\n3. Ver analytics\n4. Sair\n");
-        if (!lerInteiroTerminal("Escolha: ", &option))
-        {
-            printf("Opcao invalida.\n");
-            continue;
-        }
+        char playerName[playerNameLength];
+        int option = 0;
 
-        if (option == 1)
+        lerNomeJogadorTerminal(playerName, sizeof(playerName));
+
+        while (option != 4)
         {
-            executarPartidaTerminal(&gameHistory, playerName);
-        }
-        else if (option == 2)
-        {
-            mostrarHistorico(&gameHistory);
-        }
-        else if (option == 3)
-        {
-            mostrarAnalytics(&gameHistory);
-        }
-        else if (option != 4)
-        {
-            printf("Opcao invalida.\n");
+            printf("\n1. Jogar\n2. Ver historico\n3. Ver analytics\n4. Sair\n");
+            if (!lerInteiroTerminal("Escolha: ", &option))
+            {
+                printf("Opcao invalida.\n");
+                continue;
+            }
+
+            if (option == 1)
+            {
+                executarPartidaTerminal(&gameHistory, playerName);
+            }
+            else if (option == 2)
+            {
+                mostrarHistorico(&gameHistory);
+            }
+            else if (option == 3)
+            {
+                mostrarAnalytics(&gameHistory);
+            }
+            else if (option != 4)
+            {
+                printf("Opcao invalida.\n");
+            }
         }
     }
+#endif
 
     liberarHistorico(&gameHistory);
-    return EXIT_SUCCESS;
+    return exitCode;
 }
