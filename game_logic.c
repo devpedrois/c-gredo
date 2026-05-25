@@ -82,6 +82,12 @@ bool enviarPalpite(GameSession *gameSession, const char *guess, double currentTi
     gameSession->numericGuesses[gameSession->attemptCount] = guessValue;
     snprintf(gameSession->guesses[gameSession->attemptCount], sizeof(gameSession->guesses[gameSession->attemptCount]), "%03d", guessValue);
     gameSession->hints[gameSession->attemptCount] = hintResult;
+    if (gameSession->guessSequence[0] == '\0') {
+        snprintf(gameSession->guessSequence, sizeof(gameSession->guessSequence), "%d", guessValue);
+    } else {
+        size_t len = strlen(gameSession->guessSequence);
+        snprintf(gameSession->guessSequence + len, sizeof(gameSession->guessSequence) - len, ",%d", guessValue);
+    }
     gameSession->attemptCount++;
 
     if (hintResult.feedback == FEEDBACK_ACERTOU) {
