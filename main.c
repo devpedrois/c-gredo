@@ -1,6 +1,7 @@
 #include "analytics.h"
 #include "game_logic.h"
 #include "persistence.h"
+#include "strategy.h"
 
 #ifdef USE_RAYLIB
 #include "gui.h"
@@ -101,10 +102,13 @@ static void mostrarHistorico(const GameHistory *gameHistory)
     }
 }
 
-static void mostrarAnalytics(const GameHistory *gameHistory)
+static void mostrarAnaliseESugestoes(const GameHistory *gameHistory)
 {
+    AnalyticsReport report = buildAnalyticsReport(gameHistory);
+
     printAnalyticsReport(gameHistory);
     printLeaderboard(gameHistory);
+    printStrategyReport(gameHistory, &report);
 }
 
 static void executarPartidaTerminal(GameHistory *gameHistory, const char *playerName)
@@ -165,7 +169,7 @@ int main(void)
 
         while (option != 4)
         {
-            printf("\n1. Jogar\n2. Ver historico\n3. Ver analytics\n4. Sair\n");
+            printf("\n1. Jogar\n2. Ver historico\n3. Ver analytics e sugestoes\n4. Sair\n");
             if (!lerInteiroTerminal("Escolha: ", &option))
             {
                 printf("Opcao invalida.\n");
@@ -182,7 +186,7 @@ int main(void)
             }
             else if (option == 3)
             {
-                mostrarAnalytics(&gameHistory);
+                mostrarAnaliseESugestoes(&gameHistory);
             }
             else if (option != 4)
             {
