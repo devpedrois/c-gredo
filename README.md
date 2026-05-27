@@ -6,10 +6,14 @@ Projeto academico desenvolvido em C11 para executar um jogo de adivinhacao de nu
 
 Este repositorio foi mantido apenas com as entregas solicitadas:
 
-| Data | Entrega |
-| --- | --- |
-| 21/04 | Estrutura basica do projeto e geracao de numero aleatorio com RNG |
-| 28/04 | Loop principal do jogo e persistencia do historico de partidas |
+| Data | Entrega | Status | Descrição |
+| --- | --- | :---: | --- |
+| 21/04 | Milestone 1 | 🟩 *Concluído* | Estrutura básica do projeto e geração de número aleatório com RNG |
+| 28/04 | Milestone 2 | 🟩 *Concluído* | Loop principal do jogo e persistência do histórico de partidas em CSV |
+| 05/05 | **Capstone 1** | 🟩 *Concluído* | MVP funcional do jogo clássico de terminal com salvamento do histórico |
+| 12/05 | Milestone 4 | 🟩 *Concluído* | Relatório analítico dinâmico de João e Top 5 Leaderboard integrado |
+| 19/05 | Milestone 5 | 🟩 *Concluído* | **Entregável do Ricardo**: Algoritmos recursivos, desvio padrão e interface Raylib |
+| 26/05 | **Capstone 2** | 🟩 *Concluído* | Integração do motor heurístico de estratégia e sugestões de Pedro |
 
 ## Equipe e Responsabilidades
 
@@ -25,13 +29,12 @@ Este repositorio foi mantido apenas com as entregas solicitadas:
 
 ## Funcionalidades
 
-- Geracao aleatoria de um numero entre `1` e `100`.
-- Validacao de entradas digitadas pelo jogador.
-- Limite de `10` tentativas por partida.
-- Feedback imediato: `muito baixo`, `muito alto` ou `acertou`.
-- Menu simples no terminal.
-- Salvamento automatico das partidas em `historico_partidas.csv`.
-- Leitura do historico salvo ao iniciar o programa.
+* **Geração RNG e Validação Segura**: Sorteio aleatório entre 1 e 100 com controle rígido de 10 tentativas por partida.
+* **Persistência Híbrida em CSV**: Carregamento e gravação automáticos em `historico_partidas.csv` gravando desvios e estatísticas.
+* **Métricas Estatísticas Avançadas**: Relatório com contagem de jogos, taxa de vitória (%), média de tentativas e desvio padrão.
+* **Leaderboard Top 5**: Classificação em tempo real dos melhores jogadores ordenados por vitória, menor número de tentativas e menor tempo.
+* **Paradigma Funcional (Recursão Pura)**: Cálculo estatístico de média, mínimo, máximo e soma de diferenças quadráticas (desvio padrão) sem o uso de laços `for` ou `while`.
+* **Interface Gráfica de Usuário (Raylib GUI)**: Janela de jogo dinâmica rodando a 60 FPS com teclado físico capturado e renderização instantânea dos estados do jogo.
 
 ## Tecnologias
 
@@ -45,11 +48,17 @@ Este repositorio foi mantido apenas com as entregas solicitadas:
 
 ```text
 C-gredo/
-|-- main.c
-|-- game_logic.c
+|-- main.c              
+|-- game_logic.c         
 |-- game_logic.h
-|-- persistence.c
+|-- persistence.c        
 |-- persistence.h
+|-- analytics.c          
+|-- analytics.h
+|-- recursive_utils.c    
+|-- recursive_utils.h
+|-- gui.c                
+|-- gui.h
 |-- README.md
 `-- .gitignore
 ```
@@ -64,30 +73,34 @@ C-gredo/
 
 ## Como Compilar
 
-No Windows, usando GCC:
+Esta versão suporta dois modos de compilação e execução por meio de diretivas do pré-processador:
 
+### 🖥️ Modo 1: Sem GUI (Interface clássica de Terminal)
+Esta versão executa o menu completo interativo no terminal padrão, utilizando a biblioteca padrão C e a análise estatística com desvio padrão recursivo.
+
+**Para Compilar:**
 ```bash
-gcc -std=c11 -Wall -Wextra -pedantic main.c game_logic.c persistence.c -o adivinhacao.exe
+gcc -std=c11 -Wall -Wextra -pedantic main.c game_logic.c persistence.c analytics.c recursive_utils.c -lm -o adivinhacao.exe
 ```
 
-Em Linux/macOS:
-
+**Para Executar:**
 ```bash
-gcc -std=c11 -Wall -Wextra -pedantic main.c game_logic.c persistence.c -o adivinhacao
+.\adivinhacao.exe
 ```
 
-## Como Executar
+---
 
-No Windows:
+### 🎮 Modo 2: Com GUI (Interface Gráfica via Raylib)
+Esta versão inicia o jogo em uma janela gráfica dinâmica nativa a 60 FPS. Requer que a biblioteca **Raylib** esteja instalada no compilador GCC/MinGW do sistema.
 
+**Para Compilar:**
 ```bash
-adivinhacao.exe
+gcc -std=c11 -Wall -Wextra -pedantic -DUSE_RAYLIB main.c game_logic.c persistence.c analytics.c recursive_utils.c gui.c -lraylib -lm -o adivinhacao_raylib.exe
 ```
 
-Em Linux/macOS:
-
+**Para Executar:**
 ```bash
-./adivinhacao
+.\adivinhacao_raylib.exe
 ```
 
 ## Fluxo de Uso
